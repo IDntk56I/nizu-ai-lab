@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nizu AI Lab</title>
+<meta name="description" content="Nizu AI Lab: Nexu, sistema de postventa para inmobiliarias, y Valentina, asistente de WhatsApp para corredoras de propiedades. Santiago de Chile.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: plano de obra. Columna de lectura de 1080px, secciones separadas por cotas (líneas de medida), datos en mono como en un folio. */
+:root {
+  --papel: #eef1f3;
+  --hoja: #ffffff;
+  --tinta: #17232b;
+  --tinta-2: #4a5a63;
+  --linea: #cfd7dc;
+  --obra: #2f7a6e;      /* verde de Nexu */
+  --obra-suave: #dcebe7;
+  --senal: #c9852f;     /* ámbar de plazo */
+  --senal-suave: #f6e7cf;
+  --alerta: #b0473f;
+  --wa: #d9f2df;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --texto: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --dato: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --papel: #0f171c; --hoja: #17232b; --tinta: #e6edf0; --tinta-2: #9fb0b8; --linea: #2c3b44;
+    --obra: #5bb3a3; --obra-suave: #17352f; --senal: #e0a458; --senal-suave: #3a2c17; --alerta: #e07a70; --wa: #183a24;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --papel: #0f171c; --hoja: #17232b; --tinta: #e6edf0; --tinta-2: #9fb0b8; --linea: #2c3b44;
+  --obra: #5bb3a3; --obra-suave: #17352f; --senal: #e0a458; --senal-suave: #3a2c17; --alerta: #e07a70; --wa: #183a24;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--papel); color: var(--tinta); font-family: var(--texto); font-size: 17px; line-height: 1.55;
+  font-variation-settings: "wdth" 100;
+}
+.envoltura { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.3rem, 6vw, 4.4rem); line-height: 0.98; font-weight: 800; font-variation-settings: "wdth" 118; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.7rem, 3.6vw, 2.6rem); line-height: 1.05; font-weight: 750; font-variation-settings: "wdth" 112; }
+h3 { font-size: 1.2rem; font-weight: 700; font-variation-settings: "wdth" 104; }
+p { margin: 0; max-width: 62ch; }
+.etiqueta { font-family: var(--dato); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-2); }
+.dato { font-family: var(--dato); font-variant-numeric: tabular-nums; }
+a { color: var(--obra); }
+:focus-visible { outline: 3px solid var(--senal); outline-offset: 2px; border-radius: 4px; }
+
+/* Encabezado */
+.barra { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 20px; flex-wrap: wrap; }
+.marca { font-family: var(--display); font-weight: 800; font-variation-settings: "wdth" 120; font-size: 1.15rem; letter-spacing: 0.02em; }
+.marca span { color: var(--obra); }
+.btn { display: inline-flex; align-items: center; gap: 8px; font: 600 0.95rem var(--texto); padding: 12px 18px; border-radius: 10px; border: 1.5px solid var(--tinta); background: var(--tinta); color: var(--papel); text-decoration: none; cursor: pointer; }
+.btn.sec { background: transparent; color: var(--tinta); }
+
+/* Cota: línea de medida entre secciones */
+.cota { display: flex; align-items: center; gap: 12px; margin: 72px 0 28px; }
+.cota::before, .cota::after { content: ""; height: 1px; background: var(--linea); flex: 1; }
+.cota .etiqueta { white-space: nowrap; }
+.cota .tic { width: 1px; height: 14px; background: var(--tinta-2); }
+
+/* Hero */
+.hero { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; padding-block: 28px 8px; }
+.hero > * { min-width: 0; }
+.hero p.bajada { font-size: 1.15rem; color: var(--tinta-2); margin-top: 20px; }
+.hero .acciones { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+.hero h1 em { font-style: normal; color: var(--obra); }
+.hero h1 .ambar { color: var(--senal); }
+
+/* Folio de muestra */
+.folio { background: var(--hoja); border: 1px solid var(--linea); border-radius: 14px; padding: 18px; display: grid; gap: 14px; }
+.folio .cab { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.folio .codigo { font-family: var(--dato); font-weight: 600; }
+.pill { display: inline-block; font: 600 0.72rem var(--dato); letter-spacing: 0.04em; padding: 4px 8px; border-radius: 999px; }
+.pill.hoy { background: var(--senal-suave); color: var(--senal); }
+.pill.ok { background: var(--obra-suave); color: var(--obra); }
+.plazos { display: grid; gap: 10px; }
+.plazo { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; font-size: 0.92rem; }
+.plazo .barra-p { grid-column: 1 / -1; height: 8px; background: var(--linea); border-radius: 4px; overflow: hidden; }
+.plazo .barra-p i { display: block; height: 100%; border-radius: 4px; }
+.burbujas { display: grid; gap: 8px; font-size: 0.9rem; }
+.burbuja { max-width: 88%; padding: 8px 12px; border-radius: 12px; background: var(--papel); }
+.burbuja.yo { justify-self: end; background: var(--wa); }
+.burbuja .hora { display: block; font: 0.68rem var(--dato); color: var(--tinta-2); text-align: right; margin-top: 2px; }
+
+/* Productos */
+.productos { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.producto { background: var(--hoja); border: 1px solid var(--linea); border-radius: 14px; padding: 26px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.producto .para { font-size: 0.95rem; color: var(--tinta-2); }
+.producto ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.producto li { display: grid; grid-template-columns: 18px 1fr; gap: 10px; }
+.producto li::before { content: ""; width: 10px; height: 10px; margin-top: 8px; border: 2px solid var(--obra); border-radius: 2px; }
+.producto.valentina li::before { border-color: var(--senal); }
+.producto .nombre { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+
+/* Garantía art. 18 */
+.dos { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 40px; align-items: start; }
+.dos > * { min-width: 0; }
+.dos p + p { margin-top: 14px; }
+.tabla-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+th { font: 600 0.72rem var(--dato); letter-spacing: 0.06em; text-transform: uppercase; color: var(--tinta-2); }
+td.anios { font-family: var(--dato); font-weight: 600; font-size: 1.3rem; white-space: nowrap; }
+.si { color: var(--obra); font-weight: 700; }
+.no { color: var(--tinta-2); }
+
+/* Línea de plazos CChC */
+.linea-tiempo { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 28px; }
+.hito { border-top: 3px solid var(--linea); padding-top: 12px; display: grid; gap: 4px; }
+.hito.clave { border-top-color: var(--senal); }
+.hito .cuando { font: 600 1rem var(--dato); }
+.hito p { font-size: 0.92rem; color: var(--tinta-2); }
+
+/* Calculadora */
+.calc { background: var(--hoja); border: 1px solid var(--linea); border-radius: 14px; padding: 26px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.calc > * { min-width: 0; }
+.campo { display: grid; gap: 6px; margin-bottom: 16px; }
+.campo label { font-size: 0.9rem; font-weight: 600; }
+.campo input { font: 600 1.05rem var(--dato); padding: 10px 12px; border: 1px solid var(--linea); border-radius: 8px; background: var(--papel); color: var(--tinta); width: 100%; }
+.campo small { color: var(--tinta-2); font-size: 0.8rem; }
+.resultado { display: grid; gap: 14px; align-content: start; }
+.cifra { font: 700 clamp(2rem, 5vw, 3rem) var(--dato); line-height: 1; font-variant-numeric: tabular-nums; }
+.cifra.verde { color: var(--obra); }
+.fila-r { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--linea); padding-bottom: 8px; font-size: 0.95rem; }
+.fila-r span:last-child { font-family: var(--dato); font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Precios */
+.precios { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.precio { background: var(--hoja); border: 1px solid var(--linea); border-radius: 14px; padding: 22px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.precio.destacado { border: 2px solid var(--obra); }
+.precio .monto { font: 700 1.7rem var(--dato); }
+.precio .monto small { font-size: 0.85rem; font-weight: 400; color: var(--tinta-2); }
+.precio p { font-size: 0.92rem; color: var(--tinta-2); }
+
+/* Contacto */
+.contacto { background: var(--tinta); color: var(--papel); border-radius: 16px; padding: 36px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 28px; align-items: center; margin-bottom: 48px; }
+.contacto > * { min-width: 0; }
+.contacto p { color: color-mix(in srgb, var(--papel) 80%, transparent); margin-top: 12px; }
+.correo { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: color-mix(in srgb, var(--papel) 10%, transparent); padding: 12px; border-radius: 10px; }
+.correo .dato { font-size: 1rem; user-select: all; overflow-wrap: anywhere; flex: 1; min-width: 0; }
+.contacto .btn { background: var(--senal); border-color: var(--senal); color: #17232b; }
+.pie { font-size: 0.8rem; color: var(--tinta-2); padding-bottom: 40px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+@media (max-width: 820px) {
+  .hero, .productos, .dos, .calc, .contacto { grid-template-columns: 1fr; }
+  .precios { grid-template-columns: 1fr; }
+  .linea-tiempo { grid-template-columns: 1fr 1fr; }
+  .cota { margin-top: 56px; }
+  .contacto { padding: 24px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .plazo .barra-p i { transition: width 0.9s ease; }
+}
+</style>
+</head>
+<body>
+
+<div class="envoltura">
+  <header class="barra">
+    <div class="marca">NIZU <span>AI</span> LAB</div>
+    <a class="btn sec" href="#contacto">Agendar una demo</a>
+  </header>
+
+  <section class="hero" aria-labelledby="titulo">
+    <div>
+      <div class="etiqueta">Postventa y atención de clientes · Chile</div>
+      <h1 id="titulo" style="margin-top:14px">Ningún reclamo <em>sin plazo</em>. Ningún cliente <span class="ambar">sin respuesta</span>.</h1>
+      <p class="bajada">Construimos dos sistemas para el mercado inmobiliario chileno: Nexu ordena la postventa de inmobiliarias y constructoras; Valentina atiende por WhatsApp a los clientes de corredoras, de día y de noche. Los instalamos con sus datos y respondemos nosotros.</p>
+      <div class="acciones">
+        <a class="btn" href="#contacto">Pedir un piloto de 30 días</a>
+        <a class="btn sec" href="#precios">Ver precios en UF</a>
+      </div>
+    </div>
+
+    <div class="folio" aria-label="Ejemplo de un caso en Nexu y una conversación con Valentina">
+      <div class="cab">
+        <span class="codigo">CASO-0142</span>
+        <span class="pill hoy">CONTACTAR HOY</span>
+      </div>
+      <div style="font-size:0.95rem"><strong>Humedad en cielo del baño</strong><br><span style="color:var(--tinta-2)">Torre B · depto 504 · ingresado por el portal con 3 fotos</span></div>
+      <div class="plazos">
+        <div class="plazo"><span>Acuse de recibo · 24 h</span><span class="pill ok">A TIEMPO</span><div class="barra-p"><i style="width:100%;background:var(--obra)"></i></div></div>
+        <div class="plazo"><span>Primer contacto · 3 días hábiles</span><span class="dato" style="font-size:0.85rem;color:var(--senal)">quedan 9 h</span><div class="barra-p"><i id="barraContacto" style="width:88%;background:var(--senal)"></i></div></div>
+      </div>
+      <div class="burbujas" aria-label="Conversación de WhatsApp">
+        <div class="burbuja yo">Hola, ¿tienen deptos 2D2B en Ñuñoa bajo 5.500 UF?<span class="hora">23:41</span></div>
+        <div class="burbuja">¡Hola! Sí, tengo dos: uno en Irarrázaval por 5.380 UF y otro cerca de plaza Ñuñoa por 5.450 UF. ¿Te mando las fotos y vemos una visita?<span class="hora">23:41</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cota"><span class="tic"></span><span class="etiqueta">Dos productos</span><span class="tic"></span></div>
+
+  <section class="productos" aria-label="Productos">
+    <article class="producto">
+      <div class="nombre"><h3>Nexu</h3><span class="etiqueta">Postventa inmobiliaria</span></div>
+      <p class="para">Para inmobiliarias y constructoras que hoy llevan la postventa en planillas, correos y WhatsApp personal.</p>
+      <ul>
+        <li><span><strong>Portal del propietario sin contraseña.</strong> Un link por WhatsApp: reclama con fotos, ve en qué etapa va y cuándo es la visita.</span></li>
+        <li><span><strong>Plazos de la CChC medidos caso a caso.</strong> Acuse en 24 h y contacto en 3 días hábiles, con feriados de Chile y alertas.</span></li>
+        <li><span><strong>Garantía calculada según la ley.</strong> Desde la recepción definitiva o desde la inscripción en el CBR, según la falla.</span></li>
+        <li><span><strong>Expediente de cada vivienda en PDF.</strong> Todo lo ocurrido, con fechas, listo ante un reclamo formal.</span></li>
+        <li><span><strong>Contratistas, actas firmadas y encuesta</strong> de satisfacción al cierre, con Dashboard para la gerencia.</span></li>
+      </ul>
+    </article>
+    <article class="producto valentina">
+      <div class="nombre"><h3>Valentina</h3><span class="etiqueta">Asistente de WhatsApp</span></div>
+      <p class="para">Para corredoras que reciben consultas a toda hora y no alcanzan a responder todas ni a hacer seguimiento.</p>
+      <ul>
+        <li><span><strong>Responde en segundos</strong> con su catálogo real: precios en pesos y en UF del día, comunas, requisitos.</span></li>
+        <li><span><strong>Califica y agenda.</strong> Pregunta presupuesto, plazo y forma de pago, y deja la visita lista para el corredor.</span></li>
+        <li><span><strong>Hace el seguimiento sola</strong> a las 48 horas y a los 5 días, sin parecer un robot.</span></li>
+        <li><span><strong>Capta propietarios</strong> que quieren vender o arrendar y avisa al equipo.</span></li>
+        <li><span><strong>Resumen diario y reporte mensual</strong> con lo que pasó fuera de horario.</span></li>
+      </ul>
+    </article>
+  </section>
+
+  <div class="cota"><span class="tic"></span><span class="etiqueta">Nexu · plazos</span><span class="tic"></span></div>
+
+  <section class="dos" aria-labelledby="t-plazos">
+    <div>
+      <h2 id="t-plazos">Lo que pide la guía de la CChC, medido solo.</h2>
+      <p style="margin-top:16px">Entre 89% y 95% de los compradores reporta algún problema en su vivienda nueva. Lo que separa una molestia de un reclamo ante SERNAC suele ser el silencio: nadie avisó que se recibió, nadie llamó a tiempo.</p>
+      <p>Nexu cuenta los plazos desde que entra cada solicitud, descuenta fines de semana y feriados, y avisa en el tablero antes de que venzan.</p>
+    </div>
+    <div>
+      <div class="linea-tiempo">
+        <div class="hito"><span class="cuando">0 h</span><strong>Ingreso</strong><p>Por el portal, correo, teléfono o acta de entrega.</p></div>
+        <div class="hito clave"><span class="cuando">24 h</span><strong>Acuse de recibo</strong><p>El correo automático lo cumple en el momento.</p></div>
+        <div class="hito clave"><span class="cuando">3 días háb.</span><strong>Primer contacto</strong><p>Llamada, visita agendada o respuesta registrada.</p></div>
+        <div class="hito"><span class="cuando">Cierre</span><strong>Acta y evaluación</strong><p>Firma digital y encuesta desde el portal.</p></div>
+      </div>
+      <div class="tabla-scroll" style="margin-top:28px">
+        <table>
+          <caption class="etiqueta" style="text-align:left;padding-bottom:8px">Plazos de garantía · art. 18 Ley General de Urbanismo y Construcciones</caption>
+          <thead><tr><th>Falla</th><th>Plazo</th><th>Se cuenta desde</th></tr></thead>
+          <tbody>
+            <tr><td>Estructura soportante</td><td class="anios">10 años</td><td>Recepción definitiva municipal</td></tr>
+            <tr><td>Instalaciones y elementos constructivos</td><td class="anios">5 años</td><td>Recepción definitiva municipal</td></tr>
+            <tr><td>Terminaciones</td><td class="anios">3 años</td><td>Inscripción en el Conservador de Bienes Raíces</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="cota"><span class="tic"></span><span class="etiqueta">Comparación</span><span class="tic"></span></div>
+
+  <section aria-labelledby="t-comp">
+    <h2 id="t-comp">Planilla y WhatsApp personal, o un sistema.</h2>
+    <div class="tabla-scroll" style="margin-top:20px">
+      <table>
+        <thead><tr><th>Qué necesita la postventa</th><th>Planilla + WhatsApp</th><th>Nexu</th></tr></thead>
+        <tbody>
+          <tr><td>Saber qué casos están fuera de plazo hoy</td><td class="no">Revisando fila por fila</td><td class="si">Alerta en el tablero</td></tr>
+          <tr><td>El propietario sabe en qué va su solicitud</td><td class="no">Si alguien le escribe</td><td class="si">Su propio link, siempre al día</td></tr>
+          <tr><td>Fecha de vencimiento de la garantía</td><td class="no">Cálculo a mano</td><td class="si">Por especialidad, con la fecha legal correcta</td></tr>
+          <tr><td>Respaldo ante SERNAC o un juicio</td><td class="no">Buscar correos y chats</td><td class="si">Expediente PDF en un clic</td></tr>
+          <tr><td>Cuánto demoran los contratistas</td><td class="no">No se sabe</td><td class="si">Dashboard por contratista</td></tr>
+          <tr><td>Qué opina el propietario al cerrar</td><td class="no">No se pregunta</td><td class="si">Encuesta de 1 a 5 desde el portal</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="cota"><span class="tic"></span><span class="etiqueta">Valentina · retorno</span><span class="tic"></span></div>
+
+  <section aria-labelledby="t-calc">
+    <h2 id="t-calc">Un arriendo extra al mes paga la asistente.</h2>
+    <p style="margin-top:12px;color:var(--tinta-2)">Responder en la primera hora da 7 veces más probabilidad de calificar a un interesado que hacerlo una hora después (Harvard Business Review, 2011). Pon tus números:</p>
+    <form class="calc" id="calc" style="margin-top:24px" novalidate>
+      <div>
+        <div class="campo"><label for="arriendo">Arriendo promedio que cierras ($ al mes)</label><input id="arriendo" inputmode="numeric" value="600.000"><small>La comisión típica es el 50% del primer mes, por lado.</small></div>
+        <div class="campo"><label for="extra">Arriendos extra al mes por responder a tiempo</label><input id="extra" inputmode="decimal" value="1"><small>Consultas de noche o fin de semana que hoy se enfrían.</small></div>
+        <div class="campo"><label for="uf">Valor de la UF ($)</label><input id="uf" inputmode="numeric" value="41.200"><small>Valor de referencia; cámbialo por el del día.</small></div>
+      </div>
+      <div class="resultado" aria-live="polite">
+        <span class="etiqueta">Comisión extra al mes</span>
+        <span class="cifra verde" id="rGanancia">$300.000</span>
+        <div class="fila-r"><span>Plan WhatsApp (5,5 UF al mes)</span><span id="rCosto">$226.600</span></div>
+        <div class="fila-r"><span>Queda a favor cada mes</span><span id="rNeto">$73.400</span></div>
+        <div class="fila-r"><span>Instalación (20 UF) recuperada en</span><span id="rMeses">11,2 meses</span></div>
+        <p style="font-size:0.85rem;color:var(--tinta-2)">Una sola venta de $150 millones deja $3 millones por lado: más de un año del plan.</p>
+      </div>
+    </form>
+  </section>
+
+  <div class="cota" id="precios"><span class="tic"></span><span class="etiqueta">Precios</span><span class="tic"></span></div>
+
+  <section aria-labelledby="t-precios">
+    <h2 id="t-precios">Precios en UF, instalación incluida.</h2>
+    <div class="precios" style="margin-top:22px">
+      <article class="precio destacado">
+        <span class="etiqueta">Nexu</span>
+        <span class="monto">18–30 UF <small>al mes</small></span>
+        <p>Según cantidad de proyectos. Instalación de 10 UF con carga de proyectos, viviendas y usuarios. Contrato desde 6 meses; los datos son suyos y se exportan cuando quieran.</p>
+      </article>
+      <article class="precio">
+        <span class="etiqueta">Valentina WhatsApp</span>
+        <span class="monto">5,5 UF <small>al mes</small></span>
+        <p>Instalación de 20 UF con su catálogo, correos con su marca, resumen diario y manual del equipo.</p>
+      </article>
+      <article class="precio">
+        <span class="etiqueta">Valentina Web</span>
+        <span class="monto">2,5 UF <small>al mes</small></span>
+        <p>Chat en su página web. Instalación de 8 UF. Pagando el año, dos meses sin costo.</p>
+      </article>
+    </div>
+    <p style="margin-top:14px;font-size:0.85rem;color:var(--tinta-2)">Valores de referencia; la propuesta confirma el detalle e impuestos.</p>
+  </section>
+
+  <div class="cota"><span class="tic"></span><span class="etiqueta">Empezar</span><span class="tic"></span></div>
+
+  <section class="contacto" id="contacto" aria-labelledby="t-contacto">
+    <div>
+      <h2 id="t-contacto" style="color:var(--papel)">Piloto de 30 días al 50%.</h2>
+      <p>En un proyecto o una sede, con la carga de datos y la capacitación incluidas. El día 25 revisamos juntos los números del piloto. Si no sirve, se exportan los datos y no siguen.</p>
+    </div>
+    <div style="display:grid;gap:10px">
+      <span class="etiqueta" style="color:color-mix(in srgb, var(--papel) 70%, transparent)">Escríbenos para agendar 20 minutos</span>
+      <div class="correo"><span class="dato" id="correo">nizuai.lab@gmail.com</span><button class="btn" type="button" id="copiar">Copiar</button></div>
+      <span id="copiado" class="etiqueta" style="color:var(--senal);min-height:1em" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <footer class="pie">
+    <span>Nizu AI Lab · Santiago de Chile · <a href="privacidad.html">Política de privacidad</a></span>
+    <span class="dato">Fuentes: guía de postventa CChC; HBR 2011; art. 18 LGUC.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const num = (v) => Number(String(v).replace(/\./g, "").replace(",", ".")) || 0;
+  const pesos = (n) => "$" + Math.round(n).toLocaleString("es-CL");
+  const ids = ["arriendo", "extra", "uf"];
+  function calcular() {
+    const arriendo = num(document.getElementById("arriendo").value);
+    const extra = num(document.getElementById("extra").value);
+    const uf = num(document.getElementById("uf").value);
+    const ganancia = arriendo * 0.5 * extra;
+    const costo = 5.5 * uf;
+    const neto = ganancia - costo;
+    document.getElementById("rGanancia").textContent = pesos(ganancia);
+    document.getElementById("rCosto").textContent = pesos(costo);
+    document.getElementById("rNeto").textContent = neto >= 0 ? pesos(neto) : "−" + pesos(-neto);
+    document.getElementById("rMeses").textContent = neto > 0 ? (20 * uf / neto).toLocaleString("es-CL", { maximumFractionDigits: 1 }) + " meses" : "con más cierres";
+  }
+  ids.forEach((id) => document.getElementById(id).addEventListener("input", calcular));
+  document.getElementById("calc").addEventListener("submit", (e) => e.preventDefault());
+  calcular();
+
+  document.getElementById("copiar").addEventListener("click", () => {
+    const texto = document.getElementById("correo").textContent;
+    const aviso = document.getElementById("copiado");
+    const seleccionar = () => { const r = document.createRange(); r.selectNodeContents(document.getElementById("correo")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); aviso.textContent = "Seleccionado: cópialo con Ctrl+C"; };
+    try {
+      navigator.clipboard.writeText(texto).then(() => { aviso.textContent = "Correo copiado"; }, seleccionar);
+    } catch (e) { seleccionar(); }
+  });
+})();
+</script>
+</body>
+</html>
